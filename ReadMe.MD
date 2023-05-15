@@ -1,4 +1,4 @@
-# NodeJS Weather App
+# Pharmacy Management System (Backend App)
 This is a phamarcy management system API application. It provides backend support to a stand-alone frontend app. 
 
 ## How to Run
