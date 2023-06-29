@@ -5,19 +5,35 @@ const PoisonModel = require('../model/poisonSchema');
 const createConnection = async () => {
     try {
         const dbConnection = await mongoose.connect('mongodb://127.0.0.1/phms');
-        console.log("Connection Mongodb established");
+        console.log("Connection to Mongodb established");
         return dbConnection;
     } catch(e) {
         console.log("Connection to MongoDB failed:", e);
     }
 };
 
-const retrieveItemFromInventory = () => {
-
+const retrieveItemFromInventory = async (poisonBarcode) => {
+    try {
+        console.log("About to query the database");
+        const poison = await PoisonModel.findOne({barcode: poisonBarcode});
+        // console.log('Poison retrieved: ', poison);
+        return poison;
+    } catch(err) {
+        console.log('Retrieving poison failed: ', err);
+    }
 };
 
-const retrieveItemsFromInventory = () => {
-
+const retrieveItemsFromInventory = async () => {
+    // PoisonModel.find().then((poisons) => { console.log(poisons)}).catch((err)=>{ console.log('Retrieving all poisons from db failed: ', err);});
+    try {
+        console.log("About to query the database");
+        const poisons = await PoisonModel.find();
+        console.log('Poisons: ', poisons);
+        // console.log('Ingredient: ', poisons[0].active_ingredient[0]);
+        return poisons;
+    } catch(err) {
+        console.log('Retrieving all poisons from db failed: ', err);
+    }
 };
 
 const saveToInventory = async (item, itemCategory = 'poison') => { //cateory: poison or patient - each must be processed differently
@@ -29,9 +45,8 @@ const saveToInventory = async (item, itemCategory = 'poison') => { //cateory: po
     //   I don't if the performance hit from this design is too negative
     //4. expiryDate should be entered by user and converted to ISODate on backend
     //5. use morgan for loggin
-
     const poisonInstance = new PoisonModel(item);
-    console.log(poisonInstance.name);
+
     try {
         await poisonInstance.save();
         console.log(`New ${itemCategory} saved to MongoDb`);
