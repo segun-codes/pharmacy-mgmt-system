@@ -11,3 +11,19 @@ This is a phamarcy management system API application. It provides backend suppor
 2. Setup security feature;
 3. *****
 4. Rig up logging feature (use npm package morgan) for this;
+
+
+## Design Documentation
+1. Models include User, Poison
+2. Users
+    admin, privileges:
+        - view real-time daily sales report
+        - manage (view, add, delete, edit only) poison inventory
+        - create user
+    ph - pharmacist:
+        - view real-time daily sales report
+        - manage (view, add only) poison inventory
+        - dispense poisons  
+    asst - pharmacy assistant 
+        - manage (view only) poison inventory
+        - dispense poisons 

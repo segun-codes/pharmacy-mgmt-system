@@ -3,61 +3,39 @@ const poisonRouter = express.Router();
 const dbOperation = require('../util/dbOperation');
 const isEmpty = require('../util/utilOperation').isEmpty;
 
+const retrieveOnePoison = require('../controllers/poison-actions').retrieveOnePoison;
+const retrieveAllPoisons = require('../controllers/poison-actions').retrieveAllPoisons;
+const savePoison = require('../controllers/poison-actions').savePoison;
+const updatePoison = require('../controllers/poison-actions').updatePoison;
+const deletePoison = require('../controllers/poison-actions').deletePoison;
+
+
 // Rig-up db connection
 const dbConnection = dbOperation.createConnection();
 
-/**
- * Return all poisons 
- */
+//Retrieves all poisons - done
 poisonRouter.get('/', async (req, res) => {
-    const poisons = await dbOperation.retrieveItemsFromInventory();    
-    // res.send({details: "Retrieved list of all poisons from inventory..."});
-    res.send(poisons);
+    retrieveAllPoisons(req, res);
 });
 
-// return specific poisons 
+//Retrieves one poison - done
 poisonRouter.get('/:barcode', async (req, res) => {
-    const poisonBarcode = req.params.barcode;
-    const poison = await dbOperation.retrieveItemFromInventory(poisonBarcode);
-    // console.log('Poison retrieved: ', poison);
-    if (!isEmpty(poison)) {
-        res.send({ status: 'success', details: poison });
-    } else {
-        res.send({status: "Failed", details: `Poison with barcode ${poisonBarcode} unavailable in inventory.`});
-    }
-});
+    retrieveOnePoison(req, res);
+})
 
-
-/**  
- * Writes poison to inventory
- */ 
+//Writes poison to inventory - done 
 poisonRouter.post('/', async (req, res) => {
-    const itemData = req.body; // itemData: poisonData/patientData
-
-    itemData.expiryDate = new Date(itemData.expiryDate);
-
-    dbOperation.saveToInventory(itemData);
-    res.send({details: `Posted poison to inventory...`});
+    savePoison(req, res);
 });
 
-
-/**
- * Remove single poison
- */
-poisonRouter.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    console.log(id);
-
-    res.send({details: `Deleted posion with id ${id} from inventory...`});
+//Deletes single poison - done
+poisonRouter.delete('/:barcode', async (req, res) => {
+    deletePoison(req, res);
 });
 
-
-/**
- * Update single poison 
- */
-poisonRouter.patch('/:id', (req, res) => {
-    const id = req.params.id;
-    res.send({details: `Updated posion with id ${id} in inventory...`});
+//Update single poison 
+poisonRouter.patch('/:barcode', async (req, res) => {
+    updatePoison(req, res);
 });
 
 module.exports = poisonRouter;

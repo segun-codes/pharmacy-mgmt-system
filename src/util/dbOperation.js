@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const PoisonModel = require('../model/poisonSchema');
 
 
 const createConnection = async () => {
@@ -12,31 +11,29 @@ const createConnection = async () => {
     }
 };
 
-const retrieveItemFromInventory = async (poisonBarcode) => {
+const retrieveItemFromStore = async (Model, key, id) => {
     try {
         console.log("About to query the database");
-        const poison = await PoisonModel.findOne({barcode: poisonBarcode});
-        // console.log('Poison retrieved: ', poison);
+        const poison = await Model.findOne({[key]: id});
         return poison;
     } catch(err) {
         console.log('Retrieving poison failed: ', err);
     }
 };
 
-const retrieveItemsFromInventory = async () => {
-    // PoisonModel.find().then((poisons) => { console.log(poisons)}).catch((err)=>{ console.log('Retrieving all poisons from db failed: ', err);});
+const retrieveItemsFromStore = async (Model) => {
     try {
         console.log("About to query the database");
-        const poisons = await PoisonModel.find();
+        const poisons = await Model.find();
         console.log('Poisons: ', poisons);
-        // console.log('Ingredient: ', poisons[0].active_ingredient[0]);
+        
         return poisons;
     } catch(err) {
         console.log('Retrieving all poisons from db failed: ', err);
     }
 };
-
-const saveToInventory = async (item, itemCategory = 'poison') => { //cateory: poison or patient - each must be processed differently
+           
+const saveToStore = async (Model, item, itemCategory = 'poison') => { //cateory: poison or patient - each must be processed differently
     //1. only insert fresh document (applies only to poison) if similar does not exist in the collection 
     //2. Only update (residaul qty if such document pre-exist
     //3. I think front-end must send background query to confirm if the entered brand and generic name of a given poison already exist in the db;
@@ -45,24 +42,42 @@ const saveToInventory = async (item, itemCategory = 'poison') => { //cateory: po
     //   I don't if the performance hit from this design is too negative
     //4. expiryDate should be entered by user and converted to ISODate on backend
     //5. use morgan for loggin
-    const poisonInstance = new PoisonModel(item);
+    const poisonInstance = new Model(item);
 
     try {
-        await poisonInstance.save();
+        const newPoison = await poisonInstance.save();
         console.log(`New ${itemCategory} saved to MongoDb`);
+        return newPoison;
     } catch(err) {
         console.log('Saving to db failed: ', err);
+        throw err;
     }
 };            
 
-const deleteFromInventory = () => {
+const deleteFromStore = async (Model, key, id) => {
+    try {
+        const deletedPoison = await Model.deleteOne({[key]: id});
+        return deletedPoison;
+    } catch(err) {
+        console.log('Deletion failed', err);    
+        throw err;  
+    }
+};
 
+const updateStore = async (Model, key, id, updateData) => {
+    try {
+        await Model.updateOne({[key]: id}, {...updateData});
+    } catch(err) {
+        console.log('Update failed', err);
+        throw err;
+    }
 };
 
 module.exports = {
     createConnection,
-    retrieveItemFromInventory,
-    retrieveItemsFromInventory,
-    saveToInventory,
-    deleteFromInventory
+    retrieveItemFromStore,
+    retrieveItemsFromStore,
+    saveToStore,
+    deleteFromStore,
+    updateStore,
 };
