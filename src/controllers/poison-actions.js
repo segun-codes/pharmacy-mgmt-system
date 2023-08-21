@@ -9,23 +9,26 @@ const dbConnection = dbOperation.createConnection();
  * 
  * @param {*} req 
  * @param {*} res 
- * Note:
- *  IPNI - Indicated Poison Not in Inventory
- *  NPI - No Poison in Inventory
  */
 
 const key = 'barcode'; 
 
 //1.
 const retrieveOnePoison = async (req, res) => {
-    const poisonBarcode = +req.params.barcode;
+    if (isNaN(req.params.barcode)) {
+        console.log('Not a number');
+        res.status(404).send({status: 'failed', code: 'iurl', details: 'unknown url'});
+        return;
+    }
 
+    const poisonBarcode = +req.params.barcode;
     const poison = await dbOperation.retrieveItemFromStore(PoisonModel, key, poisonBarcode);
 
     if (!isEmpty(poison)) {
-        res.send({ status: 'success', poison });
+        res.status(200).send({status: 'success', poison });
     } else {
-        res.send({status: "failed-IPNI", details: `Poison with barcode ${poisonBarcode} unavailable in inventory.`});
+        console.log('2. Test control got here...');
+        res.status(404).send({status: 'failed', code: 'ipni', details: `poison with barcode ${poisonBarcode} not in inventory.`});
     }
 }; 
 
@@ -34,23 +37,21 @@ const retrieveAllPoisons = async (req, res) => {
     const poisons = await dbOperation.retrieveItemsFromStore(PoisonModel);
 
     if (isEmpty(poisons)) {
-        res.send({status: 'failed-NPI', details: 'No poison in inventory'}); 
+        res.status(404).send({status: 'failed', code: 'npi', details: 'no poison in inventory'}); 
     }
-    res.send(poisons);
+    res.status(200).send(poisons);
 };
 
-
 //3. 
-const savePoison = (req, res) => {
-    const itemData = req.body; // itemData: poisonData/patientData
-
+const savePoison = async (req, res) => {
+    const itemData = req.body;
     itemData.expiryDate = new Date(itemData.expiryDate);
 
     try {
-        dbOperation.saveToStore(PoisonModel, itemData);
-        res.send({status: 'success', details: 'Poison posted to inventory'});
+        await dbOperation.saveToStore(PoisonModel, itemData); // may use the returned object later
+        res.status(201).send({status: 'success', details: 'poison posted to inventory'});
     } catch(err) {
-        res.status(500).send({status: 'failed', details: "Poison retrieval failed unexpectedly"});
+        res.status(400).send(err.cause);
     }
 };
 
@@ -61,9 +62,9 @@ const updatePoison = async (req, res) => {
 
     try {
         await dbOperation.updateStore(PoisonModel, key, poisonBarcode, updatedPoison);
-        res.status(200).send({status: 'success', details: 'In progress'});
+        res.status(201).send({status: 'success', details: 'inventory upated'});
     } catch(err) {
-        res.status(500).send({status: 'wip', details: 'In progress'});
+        res.status(400).send({status: 'failed', code: 'ipf', details: 'inventory update failed'});
     }
 };
 
@@ -75,11 +76,11 @@ const deletePoison = async (req, res) => {
         const poison = await dbOperation.deleteFromStore(PoisonModel, key, poisonBarcode);
         
         if (!poison.deletedCount) {
-            return res.send({status: 'failed-IPNI', details: "No such poison to delete"});     
+            return res.status(400).send({status: 'failed', code: 'ipni', cause: "no such poison to delete"});     
         } 
-        return res.send({status: 'success', details: "Poison Deleted"}); 
+        return res.status(200).send({status: 'success', details: 'poison deleted'}); 
     } catch(err) {
-        res.status(500).json({status: 'failed', details: "Poison Deletion failed"});
+        res.status(400).json(err.message);
     }
 };
 
