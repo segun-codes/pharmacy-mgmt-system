@@ -1,51 +1,41 @@
 const express = require('express');
 const poisonRouter = express.Router();
 const dbOperation = require('../util/dbOperation');
+const isEmpty = require('../util/utilOperation').isEmpty;
+
+const retrieveOnePoison = require('../controllers/poison-actions').retrieveOnePoison;
+const retrieveAllPoisons = require('../controllers/poison-actions').retrieveAllPoisons;
+const savePoison = require('../controllers/poison-actions').savePoison;
+const updatePoison = require('../controllers/poison-actions').updatePoison;
+const deletePoison = require('../controllers/poison-actions').deletePoison;
 
 
-/**
- * Return all poisons 
- */
-poisonRouter.get('/', (req, res) => {
-    res.send({details: "Retrieved list of all poisons from inventory..."});
+// Rig-up db connection
+const dbConnection = dbOperation.createConnection();
+
+//Retrieves all poisons - done
+poisonRouter.get('/', async (req, res) => {
+    retrieveAllPoisons(req, res);
 });
 
-// return specific poisons 
-poisonRouter.get('/:id', (req, res) => {
-    const id = req.params.id;
+//Retrieves one poison - done
+poisonRouter.get('/:barcode', async (req, res) => {
+    retrieveOnePoison(req, res);
+})
 
-    res.send({details: `Retrieved details of poison with id ${id} from inventory...`});
-});
-
-
-/**  
- * Writes poison to inventory
- */ 
+//Writes poison to inventory - done 
 poisonRouter.post('/', async (req, res) => {
-    const itemData = req.body; // itemData: poisonData/patientData
-
-    const dbConnection = dbOperation.createConnection();
-    dbOperation.saveToInventory(itemData);
-    
-    res.send({details: `Posted details of bulk list of poisons to inventory...`});
+    savePoison(req, res);
 });
 
-
-/**
- * Remove single poison
- */
-poisonRouter.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    res.send({details: `Deleted posion with id ${id} from inventory...`});
+//Deletes single poison - done
+poisonRouter.delete('/:barcode', async (req, res) => {
+    deletePoison(req, res);
 });
 
-
-/**
- * Update single poison 
- */
-poisonRouter.patch('/:id', (req, res) => {
-    const id = req.params.id;
-    res.send({details: `Updated posion with id ${id} in inventory...`});
+//Update single poison 
+poisonRouter.patch('/:barcode', async (req, res) => {
+    updatePoison(req, res);
 });
 
 module.exports = poisonRouter;

@@ -1,10 +1,20 @@
 var express = require('express');
-var router = express.Router();
+const { retrieveOneUser } = require('../controllers/user-actions');
 
-/* GET users listing. */
-// Should return admin, pharmarcist, stockist, Other
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+
+var userRouter = express.Router();
+
+
+userRouter.get('/:roleId', function(req, res) {
+  retrieveOneUser(req, res);
 });
 
-module.exports = router;
+userRouter.get('/', function(req, res) {
+  retrieveAllUsers(req, res);
+});
+
+userRouter.post('/', async (req, res) => {
+  createUser(req, res);
+});
+
+module.exports = userRouter;
